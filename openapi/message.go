@@ -26,21 +26,71 @@ type MessageAttachment struct {
 	Images []MessageAttachmentImage `json:"images,omitempty"`
 }
 
+type Reaction struct {
+	CreatedTS *VChannelTS `json:"created_ts,omitempty"`
+	Reaction  *string     `json:"reaction,omitempty"`
+	UIDS      []String    `json:"uids,omitempty"`
+}
+
 type Message struct {
-	Key         *MessageKey         `json:"key,omitempty"`
-	TeamID      *string             `json:"team_id,omitempty"`
-	UID         *string             `json:"uid,omitempty"`
-	RobotID     *string             `json:"robot_id,omitempty"`
-	VChannelID  *string             `json:"vchannel_id,omitempty"`
-	ReferKey    *MessageKey         `json:"refer_key,omitempty"`
-	Subtype     *MessageSubtype     `json:"subtype,omitempty"`
-	Text        *string             `json:"text,omitempty"`
-	Fallback    *string             `json:"fallback,omitempty"`
-	Attachments []MessageAttachment `json:"attachments,omitempty"`
-	Created     *Time               `json:"created,omitempty"`
-	Updated     *Time               `json:"updated,omitempty"`
-	CreatedTS   *VChannelTS         `json:"created_ts,omitempty"`
-	IsChannel   *bool               `json:"is_channel,omitempty"`
+	Key             *MessageKey         `json:"key,omitempty"`
+	TeamID          *string             `json:"team_id,omitempty"`
+	UID             *string             `json:"uid,omitempty"`
+	RobotID         *string             `json:"robot_id,omitempty"`
+	VChannelID      *string             `json:"vchannel_id,omitempty"`
+	ReferKey        *MessageKey         `json:"refer_key,omitempty"`
+	Subtype         *MessageSubtype     `json:"subtype,omitempty"`
+	Text            *string             `json:"text,omitempty"`
+	Fallback        *string             `json:"fallback,omitempty"`
+	Attachments     []MessageAttachment `json:"attachments,omitempty"`
+	Reactions       []Reaction          `json:"reactions,omitempty"`
+	Edited          *bool               `json:"edited,omitempty"`
+	PinID           *string             `json:"pin_id,omitempty"`
+	StarID          *string             `json:"star_id,omitempty"`
+	DisableMarkdown *bool               `json:"disable_markdown,omitempty"`
+	Created         *Time               `json:"created,omitempty"`
+	Updated         *Time               `json:"updated,omitempty"`
+	CreatedTS       *VChannelTS         `json:"created_ts,omitempty"`
+	IsChannel       *bool               `json:"is_channel,omitempty"`
+}
+
+type Repost struct {
+	UID        *string         `json:"uid,omitempty"`
+	VchannelID *string         `json:"vchannel_id,omitempty"`
+	RobotID    *string         `json:"robot_id,omitempty"`
+	CreatedTS  *VChannelTS     `json:"created_ts,omitempty"`
+	MessageKey *MessageKey     `json:"message_key,omitempty"`
+	ID         *string         `json:"id,omitempty"`
+	TeamID     *string         `json:"team_id,omitempty"`
+	Subtype    *MessageSubtype `json:"subtype,omitempty"`
+	Text       *string         `json:"text,omitempty"`
+}
+
+type TextI18n struct {
+	ZHCN *string `json:"zh-CN,omitempty"`
+	EN   *string `json:"en,omitempty"`
+}
+
+type ForwardMessage struct {
+	Repost     *Repost         `json:"repost,omitempty"`
+	Key        *MessageKey     `json:"key,omitempty"`
+	Updated    *Time           `json:"updated,omitempty"`
+	IsChannel  *bool           `json:"is_channel,omitempty"`
+	UID        *string         `json:"uid,omitempty"`
+	ThreadKey  *string         `json:"thread_key,omitempty"`
+	Created    *Time           `json:"created,omitempty"`
+	VchannelID *string         `json:"vchannel_id,omitempty"`
+	ReferKey   *string         `json:"refer_key,omitempty"`
+	RobotID    *string         `json:"robot_id,omitempty"`
+	Edited     *bool           `json:"edited,omitempty"`
+	CreatedTS  *VChannelTS     `json:"created_ts,omitempty"`
+	PinID      *string         `json:"pin_id,omitempty"`
+	ID         *string         `json:"id,omitempty"`
+	TeamID     *string         `json:"team_id,omitempty"`
+	TextI18n   *TextI18n       `json:"text_i18n,omitempty"`
+	Reactions  []Reaction      `json:"reactions,omitempty"`
+	Subtype    *MessageSubtype `json:"subtype,omitempty"`
+	Text       *string         `json:"text,omitempty"`
 }
 
 type MessageService service
@@ -128,4 +178,25 @@ func (m *MessageService) UpdateText(ctx context.Context, opt *MessageUpdateTextO
 		return nil, resp, err
 	}
 	return &message, resp, nil
+}
+
+type MessageForwardOptions struct {
+	VChannelID   string     `json:"vchannel_id"`
+	Key          MessageKey `json:"message_key"`
+	ToVChannelID string     `json:"to_vchannel_id"`
+}
+
+// Forward implements `POST /message.forward`
+func (m *MessageService) Forward(ctx context.Context, opt *MessageForwardOptions) (*ForwardMessage, *http.Response, error) {
+	req, err := m.client.newRequest("POST", "message.forward", opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var forwardMessage ForwardMessage
+	resp, err := m.client.do(ctx, req, *forwardMessage)
+	if err != nil {
+		return nil, resp, err
+	}
+	return &forwardMessage, resp, nil
 }
